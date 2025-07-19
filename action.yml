@@ -1,6 +1,9 @@
-name: The name of your action here
-description: Provide a description here
-author: Your name or organization here
+name: Milestone PR Review Reminder
+description:
+  This GitHub Action sends reminders for pull requests that are not reviewed
+  within a specified time frame, excluding those with a minimum number of
+  approved reviews.
+author: TaopaiC
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
@@ -9,15 +12,35 @@ branding:
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: Your input description here
+  token:
+    description: 'GitHub token for authentication'
     required: true
-    default: '1000'
+    default: ${{ github.token }}
 
-# Define your outputs here.
+  slack_webhook_url:
+    description: 'Slack webhook URL for sending notifications'
+
+  min_approved_reviews:
+    description:
+      'Minimum number of approved reviews required for a pull request to be
+      excluded from the report'
+    required: true
+    default: '1'
+
+  milestone_property_name:
+    description: 'Property name of the milestone to be used in the report'
+    required: true
+    default: 'current-milestone'
+
+  milestone:
+    description:
+      'Milestone to be used in the report, if not using the property name'
+    required: false
+    default: ''
+
 outputs:
-  time:
-    description: Your output description here
+  reminder_message:
+    description: 'Message with the list of pull requests'
 
 runs:
   using: node20

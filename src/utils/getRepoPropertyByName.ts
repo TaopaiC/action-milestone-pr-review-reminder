@@ -1,0 +1,28 @@
+import type { Github } from '../types.js'
+
+async function getRepoPropertyByName(
+  octokit: Github,
+  owner: string,
+  repo: string,
+  propertyName: string
+): Promise<string[] | null> {
+  // Retrieve repo custom property
+  try {
+    const { data } = await octokit.rest.repos.getCustomPropertiesValues({
+      owner,
+      repo
+    })
+    const prop = data.find((p) => p.property_name === propertyName)
+    if (!prop || !prop.value) {
+      return null
+    }
+    return Array.isArray(prop.value) ? prop.value : [prop.value]
+  } catch (e) {
+    console.error('Failed to get custom property:', e)
+    return null
+  }
+}
+
+export type GetRepoPropertyByName = typeof getRepoPropertyByName
+
+export default getRepoPropertyByName
