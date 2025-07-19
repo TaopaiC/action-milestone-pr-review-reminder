@@ -49,7 +49,7 @@ describe('main.ts', () => {
     sendToSlack.mockReset()
   })
 
-  it('主要流程：取得 milestone、產生報告並發送 Slack', async () => {
+  it('main flow: get milestone, generate report and send to Slack', async () => {
     core.getInput.mockImplementation((name) => {
       switch (name) {
         case 'token':
