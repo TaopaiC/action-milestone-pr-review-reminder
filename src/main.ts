@@ -1,5 +1,9 @@
 import * as core from '@actions/core'
-import { wait } from './wait.js'
+import { getOctokit } from '@actions/github'
+import getRepoPropertyByName from './utils/getRepoPropertyByName.js'
+import getUnreviewedPRs from './utils/getUnreviewedPRs.js'
+import buildReport from './utils/buildReport.js'
+import sendToSlack from './utils/sendToSlack.js'
 
 /**
  * The main function for the action.
@@ -8,18 +12,53 @@ import { wait } from './wait.js'
  */
 export async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
+    const GITHUB_TOKEN: string = core.getInput('token', { required: true })
+    const REPO = process.env.GITHUB_REPOSITORY
+    if (!REPO) {
+      throw new Error(
+        'The GITHUB_REPOSITORY environment variable is not defined. Ensure this script is running in a GitHub Actions environment or set the variable manually.'
+      )
+    }
+    const MILESTONE_PROPERTY_NAME: string = core.getInput(
+      'milestone_property_name',
+      { required: true }
+    )
+    const MILESTONE: string = core.getInput('milestone')
+    const SLACK_WEBHOOK_URL: string = core.getInput('slack_webhook_url')
+    const MIN_APPROVED_REVIEWS: number = parseInt(
+      core.getInput('min_approved_reviews') || '1',
+      10
+    )
+    const [owner, repo] = REPO.split('/')
 
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
+    const octokit = getOctokit(GITHUB_TOKEN)
+    const milestones =
+      MILESTONE !== ''
+        ? [MILESTONE]
+        : await getRepoPropertyByName(
+            octokit,
+            owner,
+            repo,
+            MILESTONE_PROPERTY_NAME
+          )
 
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    if (!milestones) {
+      core.info('No current milestone set.')
+      return
+    }
 
-    // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString())
+    const unreviewedPRs = await getUnreviewedPRs(
+      octokit,
+      owner,
+      repo,
+      milestones,
+      MIN_APPROVED_REVIEWS
+    )
+    const report = buildReport(unreviewedPRs)
+    core.setOutput('reminder_message', report)
+    if (SLACK_WEBHOOK_URL !== '') {
+      await sendToSlack(report, SLACK_WEBHOOK_URL)
+    }
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
