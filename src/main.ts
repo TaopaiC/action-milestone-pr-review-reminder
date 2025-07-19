@@ -13,7 +13,10 @@ import sendToSlack from './utils/sendToSlack.js'
 export async function run(): Promise<void> {
   try {
     const GITHUB_TOKEN: string = core.getInput('token', { required: true })
-    const REPO = process.env.GITHUB_REPOSITORY!
+    const REPO = process.env.GITHUB_REPOSITORY
+    if (!REPO) {
+      throw new Error('The GITHUB_REPOSITORY environment variable is not defined. Ensure this script is running in a GitHub Actions environment or set the variable manually.')
+    }
     const MILESTONE_PROPERTY_NAME: string = core.getInput(
       'milestone_property_name',
       { required: true }
