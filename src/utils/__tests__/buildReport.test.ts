@@ -2,7 +2,7 @@
 import buildReport from '../buildReport.js'
 
 describe('buildReport', () => {
-  it('無待審查 PR 時回傳預設訊息', () => {
+  it('returns default message when no PRs pending review', () => {
     expect(buildReport([])).toBe(
       ':tada: There are currently no PRs pending review!'
     )
