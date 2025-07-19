@@ -28,7 +28,7 @@ describe('getUnreviewedPRs', () => {
     jest.resetAllMocks()
   })
 
-  it('回傳未達審查數量的 PR', async () => {
+  it('returns PRs that do not meet review requirements', async () => {
     mockList.mockResolvedValueOnce({
       data: [
         { number: 1, milestone: { title: 'v1.0' } },
