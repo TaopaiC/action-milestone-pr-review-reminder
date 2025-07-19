@@ -13,14 +13,14 @@ describe('buildReport', () => {
       {
         number: 1,
         title: 'Fix bug',
-        issue_url: 'https://github.com/org/repo/pull/1',
+        html_url: 'https://github.com/org/repo/pull/1',
         user: { login: 'alice' },
         requested_reviewers: [{ login: 'bob' }, { login: 'carol' }]
       },
       {
         number: 2,
         title: 'Add feature',
-        issue_url: 'https://github.com/org/repo/pull/2',
+        html_url: 'https://github.com/org/repo/pull/2',
         user: { login: 'dave' },
         requested_reviewers: []
       }
@@ -40,7 +40,7 @@ describe('buildReport', () => {
       {
         number: 3,
         title: 'Refactor code',
-        issue_url: 'https://github.com/org/repo/pull/3',
+        html_url: 'https://github.com/org/repo/pull/3',
         user: { login: 'eve' }
         // requested_reviewers 為 undefined
       }

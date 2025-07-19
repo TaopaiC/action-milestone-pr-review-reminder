@@ -151,14 +151,13 @@ describe('main.ts', () => {
     })
     getOctokit.mockReturnValue('octokit')
     getRepoPropertyByName.mockResolvedValue(null)
-    jest.spyOn(console, 'log').mockImplementation(() => {})
 
     await run()
 
     expect(getUnreviewedPRs).not.toHaveBeenCalled()
     expect(core.setOutput).not.toHaveBeenCalled()
     expect(sendToSlack).not.toHaveBeenCalled()
-    expect(console.log).toHaveBeenCalledWith('No current milestone set.')
+    expect(core.info).toHaveBeenCalledWith('No current milestone set.')
   })
 
   it('發生例外時 setFailed', async () => {

@@ -1,3 +1,4 @@
+import * as core from '@actions/core'
 import type { Github } from '../types.js'
 
 async function getRepoPropertyByName(
@@ -18,7 +19,9 @@ async function getRepoPropertyByName(
     }
     return Array.isArray(prop.value) ? prop.value : [prop.value]
   } catch (e) {
-    console.error('Failed to get custom property:', e)
+    core.error(
+      `Failed to get custom property "${propertyName}" for repo ${owner}/${repo}: ${e}`
+    )
     return null
   }
 }

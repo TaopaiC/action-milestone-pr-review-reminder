@@ -38,7 +38,7 @@ export async function run(): Promise<void> {
           )
 
     if (!milestones) {
-      console.log('No current milestone set.')
+      core.info('No current milestone set.')
       return
     }
 

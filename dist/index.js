@@ -31247,7 +31247,7 @@ async function getRepoPropertyByName(octokit, owner, repo, propertyName) {
         return Array.isArray(prop.value) ? prop.value : [prop.value];
     }
     catch (e) {
-        console.error('Failed to get custom property:', e);
+        coreExports.error(`Failed to get custom property "${propertyName}" for repo ${owner}/${repo}: ${e}`);
         return null;
     }
 }
@@ -31284,7 +31284,7 @@ function buildReport(prs) {
     }
     let text = `*Pending Review PR Report*\n`;
     prs.forEach((pr) => {
-        text += `[#${pr.number}] <${pr.issue_url}|${pr.title}> (${pr.user?.login})\n`;
+        text += `[#${pr.number}] <${pr.html_url}|${pr.title}> (${pr.user?.login})\n`;
         if (pr.requested_reviewers) {
             const requestedReviewers = pr.requested_reviewers
                 .map((requested_reviewer) => `${requested_reviewer.login}`)
@@ -31321,7 +31321,7 @@ async function run() {
             ? [MILESTONE]
             : await getRepoPropertyByName(octokit, owner, repo, MILESTONE_PROPERTY_NAME);
         if (!milestones) {
-            console.log('No current milestone set.');
+            coreExports.info('No current milestone set.');
             return;
         }
         const unreviewedPRs = await getUnreviewedPRs(octokit, owner, repo, milestones, MIN_APPROVED_REVIEWS);

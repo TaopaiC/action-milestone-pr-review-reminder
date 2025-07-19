@@ -6,7 +6,7 @@ function buildReport(prs: PR[]) {
   }
   let text = `*Pending Review PR Report*\n`
   prs.forEach((pr) => {
-    text += `[#${pr.number}] <${pr.issue_url}|${pr.title}> (${pr.user?.login})\n`
+    text += `[#${pr.number}] <${pr.html_url}|${pr.title}> (${pr.user?.login})\n`
     if (pr.requested_reviewers) {
       const requestedReviewers = pr.requested_reviewers
         .map((requested_reviewer) => `${requested_reviewer.login}`)

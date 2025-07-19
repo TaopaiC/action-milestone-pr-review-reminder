@@ -1,5 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { jest } from '@jest/globals'
+import * as core from '../../../__fixtures__/core.js'
+
+jest.unstable_mockModule('@actions/core', () => core)
 
 const getCustomPropertiesValuesMock =
   jest.fn<Github['rest']['repos']['getCustomPropertiesValues']>()
@@ -11,8 +14,10 @@ const octokitMock = {
   }
 } as unknown as Github
 
-import getRepoPropertyByName from '../getRepoPropertyByName.js'
-import { Github } from '../../types.js'
+const { default: getRepoPropertyByName } = await import(
+  '../getRepoPropertyByName.js'
+)
+import type { Github } from '../../types.js'
 
 describe('getRepoPropertyByName', () => {
   const owner = 'octocat'
@@ -86,9 +91,8 @@ describe('getRepoPropertyByName', () => {
       propertyName
     )
     expect(result).toBeNull()
-    expect(console.error).toHaveBeenCalledWith(
-      'Failed to get custom property:',
-      expect.any(Error)
+    expect(core.error).toHaveBeenCalledWith(
+      'Failed to get custom property "foo" for repo octocat/hello-world: Error: API error'
     )
   })
 })
