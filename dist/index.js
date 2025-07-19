@@ -31233,6 +31233,21 @@ function requireGithub () {
 
 var githubExports = requireGithub();
 
+/**
+ * Retrieves a custom property value from a GitHub repository by its name.
+ *
+ * @param {Github} octokit - The GitHub API client instance.
+ * @param {string} owner - The owner of the repository.
+ * @param {string} repo - The name of the repository.
+ * @param {string} propertyName - The name of the custom property to retrieve.
+ * @returns {Promise<string[] | null>} A promise that resolves to an array of property values if found,
+ * or `null` if the property is not found or an error occurs.
+ *
+ * Returns `null` if:
+ * - The property is not found in the repository.
+ * - The property exists but has no value.
+ * - An error occurs while fetching the property.
+ */
 async function getRepoPropertyByName(octokit, owner, repo, propertyName) {
     // Retrieve repo custom property
     try {
@@ -31252,6 +31267,17 @@ async function getRepoPropertyByName(octokit, owner, repo, propertyName) {
     }
 }
 
+/**
+ * Retrieves a list of pull requests (PRs) that are considered "unreviewed" based on the specified criteria.
+ * A PR is considered "unreviewed" if it belongs to one of the specified milestones and has fewer than the required number of approved reviews.
+ *
+ * @param {Github} octokit - The GitHub API client instance.
+ * @param {string} owner - The owner of the repository.
+ * @param {string} repo - The name of the repository.
+ * @param {string[]} milestones - A list of milestone titles to filter PRs by.
+ * @param {number} minApprovedReviews - The minimum number of approved reviews required for a PR to be considered "reviewed."
+ * @returns {Promise<PR[]>} A promise that resolves to an array of PR objects that are considered "unreviewed."
+ */
 async function getUnreviewedPRs(octokit, owner, repo, milestones, minApprovedReviews) {
     // Query all open PRs under the specified milestones
     const prs = await octokit.rest.pulls.list({
@@ -31278,6 +31304,18 @@ async function getUnreviewedPRs(octokit, owner, repo, milestones, minApprovedRev
     return result;
 }
 
+/**
+ * Generates a formatted report of pending review pull requests.
+ *
+ * @param {PR[]} prs - An array of pull request objects. Each object should include:
+ *   - `number` (number): The PR number.
+ *   - `html_url` (string): The URL of the PR.
+ *   - `title` (string): The title of the PR.
+ *   - `user` (object | null): The user who created the PR, with a `login` property.
+ *   - `requested_reviewers` (array | undefined): An array of reviewers, each with a `login` property.
+ * @returns {string} A formatted string report. If no PRs are pending review, returns a celebratory message.
+ *   Otherwise, returns a report listing each PR with its number, title, author, and requested reviewers.
+ */
 function buildReport(prs) {
     if (prs.length === 0) {
         return ':tada: There are currently no PRs pending review!';
@@ -31297,6 +31335,14 @@ function buildReport(prs) {
 
 var libExports = requireLib();
 
+/**
+ * Sends a message to a Slack channel using the provided webhook URL.
+ *
+ * @param {string} text - The message text to send to Slack.
+ * @param {string} slackWebhookUrl - The Slack webhook URL to send the message to.
+ * @returns {Promise<void>} A promise that resolves when the message is successfully sent.
+ * @throws {Error} Throws an error if the message fails to send.
+ */
 async function sendToSlack(text, slackWebhookUrl) {
     const httpClient = new libExports.HttpClient('milestone-pr-review-reminder');
     try {

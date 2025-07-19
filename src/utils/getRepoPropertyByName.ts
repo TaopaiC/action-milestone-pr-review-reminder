@@ -3,14 +3,14 @@ import type { Github } from '../types.js'
 
 /**
  * Retrieves a custom property value from a GitHub repository by its name.
- * 
+ *
  * @param {Github} octokit - The GitHub API client instance.
  * @param {string} owner - The owner of the repository.
  * @param {string} repo - The name of the repository.
  * @param {string} propertyName - The name of the custom property to retrieve.
  * @returns {Promise<string[] | null>} A promise that resolves to an array of property values if found,
  * or `null` if the property is not found or an error occurs.
- * 
+ *
  * Returns `null` if:
  * - The property is not found in the repository.
  * - The property exists but has no value.
