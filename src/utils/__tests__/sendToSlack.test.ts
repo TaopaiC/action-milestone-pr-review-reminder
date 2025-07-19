@@ -31,7 +31,7 @@ describe('sendToSlack', () => {
     expect(postJsonMock).toHaveBeenCalledWith(webhookUrl, { text: message })
   })
 
-  it('處理 postJson 拋出例外', async () => {
+  it('handles postJson throwing exception', async () => {
     postJsonMock.mockRejectedValueOnce(new Error('Network error'))
 
     await expect(sendToSlack(message, webhookUrl)).rejects.toThrow(
