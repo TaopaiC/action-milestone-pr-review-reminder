@@ -12,15 +12,9 @@ async function sendToSlack(text: string, slackWebhookUrl: string) {
   const httpClient = new HttpClient('milestone-pr-review-reminder')
   try {
     const response = await httpClient.postJson(slackWebhookUrl, { text })
-    if (response.message.statusCode !== 200) {
+    if (response.statusCode !== 200) {
       throw new Error(
-        `Slack webhook returned status code ${response.message.statusCode}. Message delivery failed.`
-      )
-    }
-    const responseBody = await response.readBody()
-    if (responseBody !== 'ok') {
-      throw new Error(
-        `Slack webhook returned an unexpected response: ${responseBody}. Message delivery failed.`
+        `Slack webhook returned status code ${response.statusCode}. Message delivery failed.`
       )
     }
   } catch (error: unknown) {

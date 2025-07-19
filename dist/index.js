@@ -31346,7 +31346,10 @@ var libExports = requireLib();
 async function sendToSlack(text, slackWebhookUrl) {
     const httpClient = new libExports.HttpClient('milestone-pr-review-reminder');
     try {
-        await httpClient.postJson(slackWebhookUrl, { text });
+        const response = await httpClient.postJson(slackWebhookUrl, { text });
+        if (response.statusCode !== 200) {
+            throw new Error(`Slack webhook returned status code ${response.statusCode}. Message delivery failed.`);
+        }
     }
     catch (error) {
         const errorMessage = error && typeof error === 'object' && 'message' in error
@@ -31365,6 +31368,9 @@ async function run() {
     try {
         const GITHUB_TOKEN = coreExports.getInput('token', { required: true });
         const REPO = process.env.GITHUB_REPOSITORY;
+        if (!REPO) {
+            throw new Error('The GITHUB_REPOSITORY environment variable is not defined. Ensure this script is running in a GitHub Actions environment or set the variable manually.');
+        }
         const MILESTONE_PROPERTY_NAME = coreExports.getInput('milestone_property_name', { required: true });
         const MILESTONE = coreExports.getInput('milestone');
         const SLACK_WEBHOOK_URL = coreExports.getInput('slack_webhook_url');
