@@ -28,7 +28,7 @@ describe('getRepoPropertyByName', () => {
     jest.resetAllMocks()
   })
 
-  it('成功取得屬性值 (array)', async () => {
+  it('successfully retrieves property value (array)', async () => {
     getCustomPropertiesValuesMock.mockResolvedValueOnce({
       data: [{ property_name: 'foo', value: ['a', 'b'] }]
     } as any)
