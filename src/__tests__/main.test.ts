@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
- * 單元測試：src/main.ts
+ * Unit tests for src/main.ts
  */
 import { jest } from '@jest/globals'
 import type { GetRepoPropertyByName } from '../utils/getRepoPropertyByName.js'
@@ -96,7 +96,7 @@ describe('main.ts', () => {
     expect(sendToSlack).toHaveBeenCalledWith('report text', 'https://slack')
   })
 
-  it('若 MILESTONE 有值則不呼叫 getRepoPropertyByName', async () => {
+  it('does not call getRepoPropertyByName when MILESTONE has value', async () => {
     core.getInput.mockImplementation((name) => {
       switch (name) {
         case 'token':
@@ -132,7 +132,7 @@ describe('main.ts', () => {
     expect(sendToSlack).not.toHaveBeenCalled()
   })
 
-  it('milestones 為 null 時應結束流程', async () => {
+  it('should end process when milestones is null', async () => {
     core.getInput.mockImplementation((name) => {
       switch (name) {
         case 'token':
@@ -160,7 +160,7 @@ describe('main.ts', () => {
     expect(core.info).toHaveBeenCalledWith('No current milestone set.')
   })
 
-  it('發生例外時 setFailed', async () => {
+  it('calls setFailed when exception occurs', async () => {
     core.getInput.mockImplementation(() => {
       throw new Error('input error')
     })

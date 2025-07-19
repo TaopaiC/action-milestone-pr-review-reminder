@@ -8,7 +8,7 @@ describe('buildReport', () => {
     )
   })
 
-  it('有多個 PR 並正確顯示 reviewer', () => {
+  it('generates report for multiple PRs with reviewers', () => {
     const prs = [
       {
         number: 1,
@@ -35,7 +35,7 @@ describe('buildReport', () => {
     )
   })
 
-  it('requested_reviewers 欄位為 undefined 時不顯示 reviewer', () => {
+  it('handles undefined requested_reviewers field without showing reviewers', () => {
     const prs = [
       {
         number: 3,

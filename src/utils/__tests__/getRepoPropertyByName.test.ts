@@ -41,7 +41,7 @@ describe('getRepoPropertyByName', () => {
     expect(result).toEqual(['a', 'b'])
   })
 
-  it('成功取得屬性值 (單一值)', async () => {
+  it('successfully retrieves property value (single value)', async () => {
     getCustomPropertiesValuesMock.mockResolvedValueOnce({
       data: [{ property_name: 'foo', value: 'bar' }]
     } as any)
@@ -54,7 +54,7 @@ describe('getRepoPropertyByName', () => {
     expect(result).toEqual(['bar'])
   })
 
-  it('找不到指定屬性', async () => {
+  it('returns null when property not found', async () => {
     getCustomPropertiesValuesMock.mockResolvedValueOnce({
       data: [{ property_name: 'other', value: 'baz' }]
     } as any)
@@ -67,7 +67,7 @@ describe('getRepoPropertyByName', () => {
     expect(result).toBeNull()
   })
 
-  it('屬性值為空', async () => {
+  it('returns null when property value is empty', async () => {
     getCustomPropertiesValuesMock.mockResolvedValueOnce({
       data: [{ property_name: 'foo', value: null }]
     } as any)
@@ -80,7 +80,7 @@ describe('getRepoPropertyByName', () => {
     expect(result).toBeNull()
   })
 
-  it('API 失敗時回傳 null', async () => {
+  it('returns null when API fails', async () => {
     getCustomPropertiesValuesMock.mockRejectedValueOnce(new Error('API error'))
     jest.spyOn(console, 'error').mockImplementation(() => {})
 

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
- * 單元測試：src/utils/getUnreviewedPRs.ts
+ * Unit tests for src/utils/getUnreviewedPRs.ts
  */
 import { jest } from '@jest/globals'
 
@@ -53,14 +53,14 @@ describe('getUnreviewedPRs', () => {
     expect(result.map((pr) => pr.number)).toEqual([1, 2])
   })
 
-  it('過濾不在指定 milestone 的 PR', async () => {
+  it('filters out PRs not in specified milestones', async () => {
     mockList.mockResolvedValueOnce({
       data: [
         { number: 4, milestone: { title: 'v3.0' } },
         { number: 5, milestone: null }
       ]
     } as any)
-    // 不會呼叫 listReviews
+    // listReviews should not be called
     const result = await getUnreviewedPRs(
       octokitMock as any,
       owner,
@@ -72,7 +72,7 @@ describe('getUnreviewedPRs', () => {
     expect(mockListReviews).not.toHaveBeenCalled()
   })
 
-  it('全部 PR 都已達審查數量', async () => {
+  it('returns empty array when all PRs meet review requirements', async () => {
     mockList.mockResolvedValueOnce({
       data: [{ number: 6, milestone: { title: 'v1.0' } }]
     } as any)
@@ -89,7 +89,7 @@ describe('getUnreviewedPRs', () => {
     expect(result).toEqual([])
   })
 
-  it('無任何 PR', async () => {
+  it('returns empty array when no PRs exist', async () => {
     mockList.mockResolvedValueOnce({ data: [] } as any)
     const result = await getUnreviewedPRs(
       octokitMock as any,

@@ -31299,7 +31299,15 @@ var libExports = requireLib();
 
 async function sendToSlack(text, slackWebhookUrl) {
     const httpClient = new libExports.HttpClient('milestone-pr-review-reminder');
-    await httpClient.postJson(slackWebhookUrl, { text });
+    try {
+        await httpClient.postJson(slackWebhookUrl, { text });
+    }
+    catch (error) {
+        const errorMessage = error && typeof error === 'object' && 'message' in error
+            ? error.message
+            : String(error);
+        throw new Error(`Failed to send message to Slack: ${errorMessage}`);
+    }
 }
 
 /**
