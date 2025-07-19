@@ -22,7 +22,7 @@ describe('sendToSlack', () => {
     jest.resetAllMocks()
   })
 
-  it('成功發送訊息到 Slack', async () => {
+  it('successfully sends message to Slack', async () => {
     postJsonMock.mockResolvedValueOnce({
       statusCode: 200
     } as TypedResponse<unknown>)
