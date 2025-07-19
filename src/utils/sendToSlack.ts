@@ -1,5 +1,13 @@
 import { HttpClient } from '@actions/http-client'
 
+/**
+ * Sends a message to a Slack channel using the provided webhook URL.
+ *
+ * @param {string} text - The message text to send to Slack.
+ * @param {string} slackWebhookUrl - The Slack webhook URL to send the message to.
+ * @returns {Promise<void>} A promise that resolves when the message is successfully sent.
+ * @throws {Error} Throws an error if the message fails to send.
+ */
 async function sendToSlack(text: string, slackWebhookUrl: string) {
   const httpClient = new HttpClient('milestone-pr-review-reminder')
   try {
