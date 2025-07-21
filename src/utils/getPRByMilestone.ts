@@ -83,7 +83,7 @@ async function getPRByMilestone(
     {
       owner,
       repo,
-      milestoneNumber: milestoneNumber,
+      milestoneNumber,
       states: pullRequestReviewState
     }
   )

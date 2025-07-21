@@ -32,16 +32,14 @@ function buildReport(
   milestone: MilestonePullRequest,
   minApprovedReviews: number
 ): string {
-  const unreviewdPR = milestone.pullRequests.nodes.filter(
+  const pendingReviewPRs = milestone.pullRequests.nodes.filter(
     (pr) => pr.reviews.totalCount < minApprovedReviews
   )
-  const unreviewdPRCount = unreviewdPR.length
-
-  if (unreviewdPRCount === 0) {
+  if (pendingReviewPRs.length === 0) {
     return ':tada: There are currently no PRs pending review!'
   }
-  let text = `*Pending Review PR Report for Milestone ${milestone.title}*\n`
-  unreviewdPR.forEach((pr) => {
+  let text = `*Pending Review PR Report for Milestone <${milestone.url}|${milestone.title}>*\n`
+  pendingReviewPRs.forEach((pr) => {
     text += `[#${pr.number}] <${pr.url}|${pr.title}> (${pr.author.login})\n`
     const requestedReviewers = summaryRequestedReviewers(
       pr.reviewRequests.nodes

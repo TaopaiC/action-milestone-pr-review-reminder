@@ -1,7 +1,7 @@
 import { MilestonePullRequest, PullRequest } from '../../types.js'
 import buildReport from '../buildReport.js'
 
-const prReuqestReviewToUser: PullRequest = {
+const prRequestReviewToUser: PullRequest = {
   number: 1,
   title: 'Fix bug',
   author: { login: 'alice' },
@@ -28,7 +28,7 @@ const prReuqestReviewToUser: PullRequest = {
   }
 }
 
-const prReuqestReviewToTeam: PullRequest = {
+const prRequestReviewToTeam: PullRequest = {
   number: 3,
   title: 'Doc: Update documentation',
   author: { login: 'dave' },
@@ -104,13 +104,13 @@ describe('buildReport', () => {
       pullRequests: {
         nodes: [
           {
-            ...prReuqestReviewToUser,
+            ...prRequestReviewToUser,
             reviews: {
               totalCount: 1
             }
           },
           {
-            ...prReuqestReviewToTeam,
+            ...prRequestReviewToTeam,
             reviews: {
               totalCount: 2
             }
@@ -127,7 +127,7 @@ describe('buildReport', () => {
     const mockResponse = {
       ...mockBaseResponse,
       pullRequests: {
-        nodes: [prReuqestReviewToUser, prReuqestReviewToTeam]
+        nodes: [prRequestReviewToUser, prRequestReviewToTeam]
       }
     }
     const text = buildReport(mockResponse, 1)
