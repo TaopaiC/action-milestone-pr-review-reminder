@@ -4,13 +4,15 @@
  */
 import { jest } from '@jest/globals'
 import type { GetRepoPropertyByName } from '../utils/getRepoPropertyByName.js'
-import type { GetUnreviewedPRs } from '../utils/getUnreviewedPRs.js'
+import type { GetPRByMilestone } from '../utils/getPRByMilestone.js'
 import type { BuildReport } from '../utils/buildReport.js'
 import type { SendToSlack } from '../utils/sendToSlack.js'
+import type { GetMilestoneByQuery } from '../utils/getMilestoneByQuery.js'
 
 const getOctokit = jest.fn()
 const getRepoPropertyByName = jest.fn<GetRepoPropertyByName>()
-const getUnreviewedPRs = jest.fn<GetUnreviewedPRs>()
+const getPRByMilestone = jest.fn<GetPRByMilestone>()
+const getMilestoneByQuery = jest.fn<GetMilestoneByQuery>()
 const buildReport = jest.fn<BuildReport>()
 const sendToSlack = jest.fn<SendToSlack>()
 import * as core from '../../__fixtures__/core.js'
@@ -20,8 +22,11 @@ jest.unstable_mockModule('@actions/github', () => ({ getOctokit }))
 jest.unstable_mockModule('../utils/getRepoPropertyByName.js', () => ({
   default: getRepoPropertyByName
 }))
-jest.unstable_mockModule('../utils/getUnreviewedPRs.js', () => ({
-  default: getUnreviewedPRs
+jest.unstable_mockModule('../utils/getPRByMilestone.js', () => ({
+  default: getPRByMilestone
+}))
+jest.unstable_mockModule('../utils/getMilestoneByQuery.js', () => ({
+  default: getMilestoneByQuery
 }))
 jest.unstable_mockModule('../utils/buildReport.js', () => ({
   default: buildReport
@@ -44,7 +49,7 @@ describe('main.ts', () => {
     core.setFailed.mockReset()
     getOctokit.mockReset()
     getRepoPropertyByName.mockReset()
-    getUnreviewedPRs.mockReset()
+    getPRByMilestone.mockReset()
     buildReport.mockReset()
     sendToSlack.mockReset()
   })
@@ -68,7 +73,13 @@ describe('main.ts', () => {
     })
     getOctokit.mockReturnValue('octokit')
     getRepoPropertyByName.mockResolvedValue(['v1.0'])
-    getUnreviewedPRs.mockResolvedValue([{ number: 1 }] as any)
+    getMilestoneByQuery.mockResolvedValue({
+      number: 2,
+      title: 'v1.0',
+      url: 'https://example.com/milestone/2',
+      state: 'OPEN'
+    })
+    getPRByMilestone.mockResolvedValue('RESULT' as any)
     buildReport.mockReturnValue('report text')
     sendToSlack.mockResolvedValue(undefined)
 
@@ -81,14 +92,18 @@ describe('main.ts', () => {
       repo,
       'milestone'
     )
-    expect(getUnreviewedPRs).toHaveBeenCalledWith(
+    expect(getMilestoneByQuery).toHaveBeenCalledWith(
       'octokit',
       owner,
       repo,
-      ['v1.0'],
-      2
+      'v1.0'
     )
-    expect(buildReport).toHaveBeenCalledWith([{ number: 1 }])
+    expect(getPRByMilestone).toHaveBeenCalledWith('octokit', owner, repo, 2, [
+      'APPROVED',
+      'CHANGES_REQUESTED',
+      'COMMENTED'
+    ])
+    expect(buildReport).toHaveBeenCalledWith('RESULT', 2)
     expect(core.setOutput).toHaveBeenCalledWith(
       'reminder_message',
       'report text'
@@ -104,32 +119,47 @@ describe('main.ts', () => {
         case 'milestone_property_name':
           return 'milestone'
         case 'milestone':
-          return 'v2.0'
+          return 'v1.0'
         case 'slack_webhook_url':
-          return ''
+          return 'https://slack'
         case 'min_approved_reviews':
-          return '1'
+          return '2'
         default:
           return ''
       }
     })
     getOctokit.mockReturnValue('octokit')
-    getUnreviewedPRs.mockResolvedValue([])
-    buildReport.mockReturnValue('no pr')
+    getMilestoneByQuery.mockResolvedValue({
+      number: 2,
+      title: 'v1.0',
+      url: 'https://example.com/milestone/2',
+      state: 'OPEN'
+    })
+    getPRByMilestone.mockResolvedValue('RESULT' as any)
+    buildReport.mockReturnValue('report text')
     sendToSlack.mockResolvedValue(undefined)
 
     await run()
 
+    expect(getOctokit).toHaveBeenCalledWith('token123')
     expect(getRepoPropertyByName).not.toHaveBeenCalled()
-    expect(getUnreviewedPRs).toHaveBeenCalledWith(
+    expect(getMilestoneByQuery).toHaveBeenCalledWith(
       'octokit',
       owner,
       repo,
-      ['v2.0'],
-      1
+      'v1.0'
     )
-    expect(core.setOutput).toHaveBeenCalledWith('reminder_message', 'no pr')
-    expect(sendToSlack).not.toHaveBeenCalled()
+    expect(getPRByMilestone).toHaveBeenCalledWith('octokit', owner, repo, 2, [
+      'APPROVED',
+      'CHANGES_REQUESTED',
+      'COMMENTED'
+    ])
+    expect(buildReport).toHaveBeenCalledWith('RESULT', 2)
+    expect(core.setOutput).toHaveBeenCalledWith(
+      'reminder_message',
+      'report text'
+    )
+    expect(sendToSlack).toHaveBeenCalledWith('report text', 'https://slack')
   })
 
   it('should end process when milestones is null', async () => {
@@ -151,10 +181,19 @@ describe('main.ts', () => {
     })
     getOctokit.mockReturnValue('octokit')
     getRepoPropertyByName.mockResolvedValue(null)
+    getMilestoneByQuery.mockResolvedValue({
+      number: 2,
+      title: 'v1.0',
+      url: 'https://example.com/milestone/2',
+      state: 'OPEN'
+    })
+    getPRByMilestone.mockResolvedValue('RESULT' as any)
+    buildReport.mockReturnValue('report text')
+    sendToSlack.mockResolvedValue(undefined)
 
     await run()
 
-    expect(getUnreviewedPRs).not.toHaveBeenCalled()
+    expect(getPRByMilestone).not.toHaveBeenCalled()
     expect(core.setOutput).not.toHaveBeenCalled()
     expect(sendToSlack).not.toHaveBeenCalled()
     expect(core.info).toHaveBeenCalledWith('No current milestone set.')

@@ -1,9 +1,10 @@
 import * as core from '@actions/core'
 import { getOctokit } from '@actions/github'
 import getRepoPropertyByName from './utils/getRepoPropertyByName.js'
-import getUnreviewedPRs from './utils/getUnreviewedPRs.js'
+import getPRByMilestone from './utils/getPRByMilestone.js'
 import buildReport from './utils/buildReport.js'
 import sendToSlack from './utils/sendToSlack.js'
+import getMilestoneByQuery from './utils/getMilestoneByQuery.js'
 
 /**
  * The main function for the action.
@@ -32,7 +33,7 @@ export async function run(): Promise<void> {
     const [owner, repo] = REPO.split('/')
 
     const octokit = getOctokit(GITHUB_TOKEN)
-    const milestones =
+    const milestoneTitles =
       MILESTONE !== ''
         ? [MILESTONE]
         : await getRepoPropertyByName(
@@ -42,23 +43,53 @@ export async function run(): Promise<void> {
             MILESTONE_PROPERTY_NAME
           )
 
-    if (!milestones) {
+    if (!milestoneTitles) {
       core.info('No current milestone set.')
       return
     }
 
-    const unreviewedPRs = await getUnreviewedPRs(
-      octokit,
-      owner,
-      repo,
-      milestones,
-      MIN_APPROVED_REVIEWS
-    )
-    const report = buildReport(unreviewedPRs)
-    core.setOutput('reminder_message', report)
-    if (SLACK_WEBHOOK_URL !== '') {
-      await sendToSlack(report, SLACK_WEBHOOK_URL)
-    }
+    const _promiseTasks = milestoneTitles.map(async (milestoneTitle) => {
+      const milestone = await getMilestoneByQuery(
+        octokit,
+        owner,
+        repo,
+        milestoneTitle
+      )
+
+      if (core.isDebug()) {
+        core.debug('getMilestoneByQuery: ' + JSON.stringify(milestone, null, 2))
+      }
+
+      if (!milestone) {
+        core.info(`Milestone "${milestoneTitle}" not found.`)
+        return
+      }
+
+      const result = await getPRByMilestone(
+        octokit,
+        owner,
+        repo,
+        milestone.number,
+        ['APPROVED', 'CHANGES_REQUESTED', 'COMMENTED']
+      )
+
+      if (core.isDebug()) {
+        core.debug('getPRByMilestone: ' + JSON.stringify(result, null, 2))
+      }
+
+      const report = buildReport(result, MIN_APPROVED_REVIEWS)
+
+      if (core.isDebug()) {
+        core.debug('Report: ' + JSON.stringify(report, null, 2))
+      }
+
+      core.setOutput('reminder_message', report)
+
+      if (SLACK_WEBHOOK_URL !== '') {
+        await sendToSlack(report, SLACK_WEBHOOK_URL)
+      }
+    })
+    await Promise.all(_promiseTasks)
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
