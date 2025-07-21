@@ -31267,67 +31267,121 @@ async function getRepoPropertyByName(octokit, owner, repo, propertyName) {
     }
 }
 
+const GQL_PRS_BY_MILESTONE = /* GraphQL */ `
+  query fetchPullRequests(
+    $owner: String!
+    $repo: String!
+    $milestoneNumber: Int!
+  ) {
+    repository(owner: $owner, name: $repo) {
+      milestone(number: $milestoneNumber) {
+        number
+        title
+        url
+        state
+        pullRequests(first: 100) {
+          nodes {
+            number
+            title
+            author {
+              login
+            }
+            url
+            state
+            reviews(states: [APPROVED]) {
+              totalCount
+            }
+            reviewRequests(first: 30) {
+              nodes {
+                requestedReviewer {
+                  __typename
+                  ... on User {
+                    login
+                  }
+                  ... on Bot {
+                    login
+                  }
+                  ... on Team {
+                    id
+                    members(first: 100) {
+                      nodes {
+                        login
+                      }
+                    }
+                  }
+                  ... on Mannequin {
+                    login
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 /**
- * Retrieves a list of pull requests (PRs) that are considered "unreviewed" based on the specified criteria.
- * A PR is considered "unreviewed" if it belongs to one of the specified milestones and has fewer than the required number of approved reviews.
+ * Fetches pull requests for a specific milestone in a GitHub repository.
  *
- * @param {Github} octokit - The GitHub API client instance.
- * @param {string} owner - The owner of the repository.
- * @param {string} repo - The name of the repository.
- * @param {string[]} milestones - A list of milestone titles to filter PRs by.
- * @param {number} minApprovedReviews - The minimum number of approved reviews required for a PR to be considered "reviewed."
- * @returns {Promise<PR[]>} A promise that resolves to an array of PR objects that are considered "unreviewed."
+ * @param octokit - The Octokit instance to use for making GraphQL requests.
+ * @param owner - The owner of the repository.
+ * @param repo - The name of the repository.
+ * @param milestoneNumber - The number of the milestone to fetch pull requests for.
+ * @returns - A promise that resolves to a MilestonePullRequest object containing the pull requests for the specified milestone.
  */
-async function getUnreviewedPRs(octokit, owner, repo, milestones, minApprovedReviews) {
-    // Query all open PRs under the specified milestones
-    const prs = await octokit.rest.pulls.list({
+async function getPRByMilestone(octokit, owner, repo, milestoneNumber) {
+    const response = await octokit.graphql(GQL_PRS_BY_MILESTONE, {
         owner,
         repo,
-        state: 'open',
-        per_page: 100
+        milestoneNumber
     });
-    // Filter by milestone and check review status
-    const result = [];
-    for (const pr of prs.data) {
-        if (!pr.milestone || !milestones.includes(pr.milestone.title))
-            continue;
-        const reviews = await octokit.rest.pulls.listReviews({
-            owner,
-            repo,
-            pull_number: pr.number
-        });
-        const approved = reviews.data.filter((review) => review.state === 'APPROVED');
-        if (approved.length < minApprovedReviews) {
-            result.push(pr);
-        }
-    }
-    return result;
+    return response.repository.milestone;
 }
 
 /**
+ * Returns a new array with unique items from the input array.
+ *
+ * @param array - An array of items to filter for uniqueness.
+ * @returns A new array containing only unique items from the input array.
+ */
+function uniq(array) {
+    return Array.from(new Set(array));
+}
+
+function summaryRequestedReviewers(nodes) {
+    return uniq(nodes
+        .map(({ requestedReviewer }) => {
+        switch (requestedReviewer.__typename) {
+            case 'User':
+            case 'Bot':
+            case 'Mannequin':
+                return requestedReviewer.login;
+            case 'Team':
+                return requestedReviewer.members.nodes.map((member) => member.login);
+        }
+    })
+        .flat());
+}
+/**
  * Generates a formatted report of pending review pull requests.
  *
- * @param {PR[]} prs - An array of pull request objects. Each object should include:
- *   - `number` (number): The PR number.
- *   - `html_url` (string): The URL of the PR.
- *   - `title` (string): The title of the PR.
- *   - `user` (object | null): The user who created the PR, with a `login` property.
- *   - `requested_reviewers` (array | undefined): An array of reviewers, each with a `login` property.
+ * @param {MilestonePullRequest} milestone - The milestone object containing pull requests.
+ * @param {number} minApprovedReviews - The minimum number of approved reviews required for a pull request to be considered reviewed.
  * @returns {string} A formatted string report. If no PRs are pending review, returns a celebratory message.
  *   Otherwise, returns a report listing each PR with its number, title, author, and requested reviewers.
  */
-function buildReport(prs) {
-    if (prs.length === 0) {
+function buildReport(milestone, minApprovedReviews) {
+    const pendingReviewPRs = milestone.pullRequests.nodes.filter((pr) => pr.reviews.totalCount < minApprovedReviews);
+    if (pendingReviewPRs.length === 0) {
         return ':tada: There are currently no PRs pending review!';
     }
-    let text = `*Pending Review PR Report*\n`;
-    prs.forEach((pr) => {
-        text += `[#${pr.number}] <${pr.html_url}|${pr.title}> (${pr.user?.login})\n`;
-        if (pr.requested_reviewers) {
-            const requestedReviewers = pr.requested_reviewers
-                .map((requested_reviewer) => `${requested_reviewer.login}`)
-                .join(', ');
-            text += `  Waiting on ${requestedReviewers}\n`;
+    let text = `*Pending Review PR Report for Milestone <${milestone.url}|${milestone.title}>*\n`;
+    pendingReviewPRs.forEach((pr) => {
+        text += `[#${pr.number}] <${pr.url}|${pr.title}> (${pr.author.login})\n`;
+        const requestedReviewers = summaryRequestedReviewers(pr.reviewRequests.nodes);
+        if (requestedReviewers.length > 0) {
+            text += `  Waiting on ${requestedReviewers.join(', ')}\n`;
         }
     });
     return text;
@@ -31359,6 +31413,43 @@ async function sendToSlack(text, slackWebhookUrl) {
     }
 }
 
+const GQL_MILESTONES_BY_QUERY = /* GraphQL */ `
+  query fetchMilestonesByQuery(
+    $owner: String!
+    $repo: String!
+    $milestoneQuery: String!
+  ) {
+    repository(owner: $owner, name: $repo) {
+      milestones(query: $milestoneQuery, first: 100) {
+        nodes {
+          number
+          title
+          url
+          state
+        }
+      }
+    }
+  }
+`;
+/**
+ * Fetches a milestone by its title using a GraphQL query.
+ *
+ * @param octokit - The Octokit instance to use for making GraphQL requests.
+ * @param owner - The owner of the repository.
+ * @param repo - The name of the repository.
+ * @param milestoneTitle - The title of the milestone to fetch.
+ * @returns A promise that resolves to the milestone object if found, or undefined if not found.
+ */
+async function getMilestoneByQuery(octokit, owner, repo, milestoneTitle) {
+    const response = await octokit.graphql(GQL_MILESTONES_BY_QUERY, {
+        owner,
+        repo,
+        milestoneQuery: milestoneTitle
+    });
+    const milestone = response.repository.milestones.nodes.find((milestone) => milestone.title === milestoneTitle);
+    return milestone;
+}
+
 /**
  * The main function for the action.
  *
@@ -31377,19 +31468,36 @@ async function run() {
         const MIN_APPROVED_REVIEWS = parseInt(coreExports.getInput('min_approved_reviews') || '1', 10);
         const [owner, repo] = REPO.split('/');
         const octokit = githubExports.getOctokit(GITHUB_TOKEN);
-        const milestones = MILESTONE !== ''
+        const milestoneTitles = MILESTONE !== ''
             ? [MILESTONE]
             : await getRepoPropertyByName(octokit, owner, repo, MILESTONE_PROPERTY_NAME);
-        if (!milestones) {
+        if (!milestoneTitles) {
             coreExports.info('No current milestone set.');
             return;
         }
-        const unreviewedPRs = await getUnreviewedPRs(octokit, owner, repo, milestones, MIN_APPROVED_REVIEWS);
-        const report = buildReport(unreviewedPRs);
-        coreExports.setOutput('reminder_message', report);
-        if (SLACK_WEBHOOK_URL !== '') {
-            await sendToSlack(report, SLACK_WEBHOOK_URL);
-        }
+        const milestonePromises = milestoneTitles.map(async (milestoneTitle) => {
+            const milestone = await getMilestoneByQuery(octokit, owner, repo, milestoneTitle);
+            if (coreExports.isDebug()) {
+                coreExports.debug('getMilestoneByQuery: ' + JSON.stringify(milestone, null, 2));
+            }
+            if (!milestone) {
+                coreExports.info(`Milestone "${milestoneTitle}" not found.`);
+                return;
+            }
+            const result = await getPRByMilestone(octokit, owner, repo, milestone.number);
+            if (coreExports.isDebug()) {
+                coreExports.debug('getPRByMilestone: ' + JSON.stringify(result, null, 2));
+            }
+            const report = buildReport(result, MIN_APPROVED_REVIEWS);
+            if (coreExports.isDebug()) {
+                coreExports.debug('Report: ' + JSON.stringify(report, null, 2));
+            }
+            coreExports.setOutput('reminder_message', report);
+            if (SLACK_WEBHOOK_URL !== '') {
+                await sendToSlack(report, SLACK_WEBHOOK_URL);
+            }
+        });
+        await Promise.all(milestonePromises);
     }
     catch (error) {
         // Fail the workflow run if an error occurs

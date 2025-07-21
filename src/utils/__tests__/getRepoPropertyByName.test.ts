@@ -82,7 +82,6 @@ describe('getRepoPropertyByName', () => {
 
   it('returns null when API fails', async () => {
     getCustomPropertiesValuesMock.mockRejectedValueOnce(new Error('API error'))
-    jest.spyOn(console, 'error').mockImplementation(() => {})
 
     const result = await getRepoPropertyByName(
       octokitMock as any,
