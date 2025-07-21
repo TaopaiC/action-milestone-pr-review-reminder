@@ -48,7 +48,7 @@ export async function run(): Promise<void> {
       return
     }
 
-    const _promiseTasks = milestoneTitles.map(async (milestoneTitle) => {
+    const milestonePromises = milestoneTitles.map(async (milestoneTitle) => {
       const milestone = await getMilestoneByQuery(
         octokit,
         owner,
@@ -89,7 +89,7 @@ export async function run(): Promise<void> {
         await sendToSlack(report, SLACK_WEBHOOK_URL)
       }
     })
-    await Promise.all(_promiseTasks)
+    await Promise.all(milestonePromises)
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)

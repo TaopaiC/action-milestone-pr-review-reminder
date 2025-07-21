@@ -31477,7 +31477,7 @@ async function run() {
             coreExports.info('No current milestone set.');
             return;
         }
-        const _promiseTasks = milestoneTitles.map(async (milestoneTitle) => {
+        const milestonePromises = milestoneTitles.map(async (milestoneTitle) => {
             const milestone = await getMilestoneByQuery(octokit, owner, repo, milestoneTitle);
             if (coreExports.isDebug()) {
                 coreExports.debug('getMilestoneByQuery: ' + JSON.stringify(milestone, null, 2));
@@ -31499,7 +31499,7 @@ async function run() {
                 await sendToSlack(report, SLACK_WEBHOOK_URL);
             }
         });
-        await Promise.all(_promiseTasks);
+        await Promise.all(milestonePromises);
     }
     catch (error) {
         // Fail the workflow run if an error occurs
