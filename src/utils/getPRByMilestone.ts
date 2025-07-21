@@ -68,23 +68,20 @@ export type FetchPullRequestsByMilestone = {
  * @param owner - The owner of the repository.
  * @param repo - The name of the repository.
  * @param milestoneNumber - The number of the milestone to fetch pull requests for.
- * @param pullRequestReviewState - The states of pull requests to filter by (e.g., 'OPEN', 'CLOSED').
  * @returns - A promise that resolves to a MilestonePullRequest object containing the pull requests for the specified milestone.
  */
 async function getPRByMilestone(
   octokit: Github,
   owner: string,
   repo: string,
-  milestoneNumber: number,
-  pullRequestReviewState: string[]
+  milestoneNumber: number
 ): Promise<MilestonePullRequest> {
   const response = await octokit.graphql<FetchPullRequestsByMilestone>(
     GQL_PRS_BY_MILESTONE,
     {
       owner,
       repo,
-      milestoneNumber,
-      states: pullRequestReviewState
+      milestoneNumber
     }
   )
 

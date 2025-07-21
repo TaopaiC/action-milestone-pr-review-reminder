@@ -69,8 +69,7 @@ export async function run(): Promise<void> {
         octokit,
         owner,
         repo,
-        milestone.number,
-        ['APPROVED', 'CHANGES_REQUESTED', 'COMMENTED']
+        milestone.number
       )
 
       if (core.isDebug()) {

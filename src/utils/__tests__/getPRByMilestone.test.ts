@@ -74,11 +74,7 @@ describe('getPRByMilestone', () => {
       }
     } satisfies FetchPullRequestsByMilestone)
 
-    const result = await getPRByMilestone(octokitMock, owner, repo, 1, [
-      'APPROVED',
-      'CHANGES_REQUESTED',
-      'COMMENTED'
-    ])
+    const result = await getPRByMilestone(octokitMock, owner, repo, 1)
     expect(result.pullRequests.nodes.map((pr) => pr.number)).toEqual([1, 2])
   })
 })

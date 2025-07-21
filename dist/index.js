@@ -31328,15 +31328,13 @@ const GQL_PRS_BY_MILESTONE = /* GraphQL */ `
  * @param owner - The owner of the repository.
  * @param repo - The name of the repository.
  * @param milestoneNumber - The number of the milestone to fetch pull requests for.
- * @param pullRequestReviewState - The states of pull requests to filter by (e.g., 'OPEN', 'CLOSED').
  * @returns - A promise that resolves to a MilestonePullRequest object containing the pull requests for the specified milestone.
  */
-async function getPRByMilestone(octokit, owner, repo, milestoneNumber, pullRequestReviewState) {
+async function getPRByMilestone(octokit, owner, repo, milestoneNumber) {
     const response = await octokit.graphql(GQL_PRS_BY_MILESTONE, {
         owner,
         repo,
-        milestoneNumber,
-        states: pullRequestReviewState
+        milestoneNumber
     });
     return response.repository.milestone;
 }
@@ -31486,7 +31484,7 @@ async function run() {
                 coreExports.info(`Milestone "${milestoneTitle}" not found.`);
                 return;
             }
-            const result = await getPRByMilestone(octokit, owner, repo, milestone.number, ['APPROVED', 'CHANGES_REQUESTED', 'COMMENTED']);
+            const result = await getPRByMilestone(octokit, owner, repo, milestone.number);
             if (coreExports.isDebug()) {
                 coreExports.debug('getPRByMilestone: ' + JSON.stringify(result, null, 2));
             }

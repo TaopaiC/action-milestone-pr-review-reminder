@@ -98,11 +98,7 @@ describe('main.ts', () => {
       repo,
       'v1.0'
     )
-    expect(getPRByMilestone).toHaveBeenCalledWith('octokit', owner, repo, 2, [
-      'APPROVED',
-      'CHANGES_REQUESTED',
-      'COMMENTED'
-    ])
+    expect(getPRByMilestone).toHaveBeenCalledWith('octokit', owner, repo, 2)
     expect(buildReport).toHaveBeenCalledWith('RESULT', 2)
     expect(core.setOutput).toHaveBeenCalledWith(
       'reminder_message',
@@ -149,11 +145,7 @@ describe('main.ts', () => {
       repo,
       'v1.0'
     )
-    expect(getPRByMilestone).toHaveBeenCalledWith('octokit', owner, repo, 2, [
-      'APPROVED',
-      'CHANGES_REQUESTED',
-      'COMMENTED'
-    ])
+    expect(getPRByMilestone).toHaveBeenCalledWith('octokit', owner, repo, 2)
     expect(buildReport).toHaveBeenCalledWith('RESULT', 2)
     expect(core.setOutput).toHaveBeenCalledWith(
       'reminder_message',
