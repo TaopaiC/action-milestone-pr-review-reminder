@@ -34,6 +34,7 @@ describe('getPRByMilestone', () => {
                 author: { login: 'user1' },
                 url: 'https://example.com/pr/1',
                 state: 'OPEN',
+                isDraft: false,
                 reviews: {
                   totalCount: 0
                 },
@@ -54,6 +55,7 @@ describe('getPRByMilestone', () => {
                 author: { login: 'user2' },
                 url: 'https://example.com/pr/2',
                 state: 'OPEN',
+                isDraft: false,
                 reviews: {
                   totalCount: 2
                 },

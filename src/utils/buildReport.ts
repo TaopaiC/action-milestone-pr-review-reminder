@@ -33,7 +33,10 @@ function buildReport(
   minApprovedReviews: number
 ): string {
   const pendingReviewPRs = milestone.pullRequests.nodes.filter(
-    (pr) => pr.state === 'OPEN' && pr.reviews.totalCount < minApprovedReviews
+    (pr) =>
+      pr.state === 'OPEN' &&
+      !pr.isDraft &&
+      pr.reviews.totalCount < minApprovedReviews
   )
   if (pendingReviewPRs.length === 0) {
     return ':tada: There are currently no PRs pending review!'

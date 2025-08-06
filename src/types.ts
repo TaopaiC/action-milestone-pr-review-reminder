@@ -35,6 +35,7 @@ export type PullRequest = {
   }
   url: string
   state: 'OPEN' | 'CLOSED' | 'MERGED'
+  isDraft: boolean
   reviews: {
     totalCount: number
   }
