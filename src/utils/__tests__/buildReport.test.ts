@@ -7,6 +7,7 @@ const prRequestReviewToUser: PullRequest = {
   author: { login: 'alice' },
   url: 'https://example.com/pr/1',
   state: 'OPEN',
+  isDraft: false,
   reviews: {
     totalCount: 0
   },
@@ -34,6 +35,7 @@ const prRequestReviewToTeam: PullRequest = {
   author: { login: 'dave' },
   url: 'https://example.com/pr/3',
   state: 'OPEN',
+  isDraft: false,
   reviews: {
     totalCount: 0
   },
@@ -73,6 +75,7 @@ const prRequestReviewToUndefined: PullRequest = {
   author: { login: 'bob' },
   url: 'https://example.com/pr/2',
   state: 'OPEN',
+  isDraft: false,
   reviews: {
     totalCount: 0
   },
@@ -87,6 +90,7 @@ const prMerged: PullRequest = {
   author: { login: 'charlie' },
   url: 'https://example.com/pr/4',
   state: 'MERGED',
+  isDraft: false,
   reviews: {
     totalCount: 0
   },
@@ -108,6 +112,29 @@ const prClosed: PullRequest = {
   author: { login: 'delta' },
   url: 'https://example.com/pr/5',
   state: 'CLOSED',
+  isDraft: false,
+  reviews: {
+    totalCount: 0
+  },
+  reviewRequests: {
+    nodes: [
+      {
+        requestedReviewer: {
+          __typename: 'User',
+          login: 'reviewer'
+        }
+      }
+    ]
+  }
+}
+
+const prDraft: PullRequest = {
+  number: 6,
+  title: 'Draft PR',
+  author: { login: 'echo' },
+  url: 'https://example.com/pr/6',
+  state: 'OPEN',
+  isDraft: true,
   reviews: {
     totalCount: 0
   },
@@ -226,6 +253,31 @@ describe('buildReport', () => {
       ...mockBaseResponse,
       pullRequests: {
         nodes: [prMerged, prClosed]
+      }
+    }
+    expect(buildReport(mockResponse, 1)).toBe(
+      ':tada: There are currently no PRs pending review!'
+    )
+  })
+
+  it('excludes draft PRs from the report', () => {
+    const mockResponse = {
+      ...mockBaseResponse,
+      pullRequests: {
+        nodes: [prRequestReviewToUser, prDraft]
+      }
+    }
+    const text = buildReport(mockResponse, 1)
+    expect(text).toContain('[#1] <https://example.com/pr/1|Fix bug> (alice)')
+    expect(text).not.toContain('Draft PR')
+    expect(text).not.toContain('#6')
+  })
+
+  it('returns celebration message when only draft PRs exist', () => {
+    const mockResponse = {
+      ...mockBaseResponse,
+      pullRequests: {
+        nodes: [prDraft]
       }
     }
     expect(buildReport(mockResponse, 1)).toBe(

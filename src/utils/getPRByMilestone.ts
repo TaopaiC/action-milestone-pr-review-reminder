@@ -21,6 +21,7 @@ const GQL_PRS_BY_MILESTONE = /* GraphQL */ `
             }
             url
             state
+            isDraft
             reviews(states: [APPROVED]) {
               totalCount
             }
