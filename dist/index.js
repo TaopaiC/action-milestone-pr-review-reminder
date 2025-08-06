@@ -31372,7 +31372,7 @@ function summaryRequestedReviewers(nodes) {
  *   Otherwise, returns a report listing each PR with its number, title, author, and requested reviewers.
  */
 function buildReport(milestone, minApprovedReviews) {
-    const pendingReviewPRs = milestone.pullRequests.nodes.filter((pr) => pr.reviews.totalCount < minApprovedReviews);
+    const pendingReviewPRs = milestone.pullRequests.nodes.filter((pr) => pr.state === 'OPEN' && pr.reviews.totalCount < minApprovedReviews);
     if (pendingReviewPRs.length === 0) {
         return ':tada: There are currently no PRs pending review!';
     }
