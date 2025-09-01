@@ -20,6 +20,8 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         id: setup-node
@@ -52,6 +54,8 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - name: Test Local Action
         id: test-action
@@ -60,6 +64,14 @@ jobs:
           milestone: v0.1.0
           min_approved_reviews: 1
 
-      - name: Print Output
+      - name: Test Output with Environment Variable
         id: output
-        run: echo "${{ steps.test-action.outputs.reminder_message }}"
+        env:
+          REMINDER_MSG: ${{ steps.test-action.outputs.reminder_message }}
+        run: |
+          echo "Testing output value..."
+          if [ -z "$REMINDER_MSG" ]; then
+            echo "❌ Output is empty"
+            exit 1
+          fi
+          echo "✅ Output value: $REMINDER_MSG"
