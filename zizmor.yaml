@@ -1,0 +1,12 @@
+---
+# https://docs.zizmor.sh/configuration/
+# https://docs.zizmor.sh/audits/
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        'actions/*': ref-pin
+        'github/*': ref-pin
+        'ruby/setup-ruby': ref-pin
+        'licensee/setup-licensed': ref-pin
+        'super-linter/super-linter/slim': ref-pin
