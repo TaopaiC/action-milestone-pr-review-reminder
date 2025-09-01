@@ -163,7 +163,7 @@ const mockBaseResponse: MilestonePullRequest = {
 describe('buildReport', () => {
   it('returns default message when no PRs', () => {
     expect(buildReport(mockBaseResponse, 1)).toBe(
-      ':tada: There are currently no PRs pending review!'
+      '*Pending Review PR Report for Milestone <https://example.com/milestone/1|v1.0>*\n:tada: There are currently no PRs pending review!'
     )
   })
 
@@ -188,7 +188,7 @@ describe('buildReport', () => {
       }
     }
     expect(buildReport(mockResponse, 1)).toBe(
-      ':tada: There are currently no PRs pending review!'
+      '*Pending Review PR Report for Milestone <https://example.com/milestone/1|v1.0>*\n:tada: There are currently no PRs pending review!'
     )
   })
 
@@ -256,7 +256,7 @@ describe('buildReport', () => {
       }
     }
     expect(buildReport(mockResponse, 1)).toBe(
-      ':tada: There are currently no PRs pending review!'
+      '*Pending Review PR Report for Milestone <https://example.com/milestone/1|v1.0>*\n:tada: There are currently no PRs pending review!'
     )
   })
 
@@ -281,7 +281,7 @@ describe('buildReport', () => {
       }
     }
     expect(buildReport(mockResponse, 1)).toBe(
-      ':tada: There are currently no PRs pending review!'
+      '*Pending Review PR Report for Milestone <https://example.com/milestone/1|v1.0>*\n:tada: There are currently no PRs pending review!'
     )
   })
 })
