@@ -38,10 +38,10 @@ function buildReport(
       !pr.isDraft &&
       pr.reviews.totalCount < minApprovedReviews
   )
-  if (pendingReviewPRs.length === 0) {
-    return ':tada: There are currently no PRs pending review!'
-  }
   let text = `*Pending Review PR Report for Milestone <${milestone.url}|${milestone.title}>*\n`
+  if (pendingReviewPRs.length === 0) {
+    return text + ':tada: There are currently no PRs pending review!'
+  }
   pendingReviewPRs.forEach((pr) => {
     text += `[#${pr.number}] <${pr.url}|${pr.title}> (${pr.author.login})\n`
     const requestedReviewers = summaryRequestedReviewers(
